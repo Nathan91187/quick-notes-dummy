@@ -18,11 +18,9 @@ class EditNoteScreen extends StatefulWidget {
 class _EditNoteScreenState extends State<EditNoteScreen> {
   final bodyController = TextEditingController();
   final titleController = TextEditingController();
-  final idController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
    String? errorMsg;
   bool isLoading = false;
-  final Map <String, dynamic> updates = {};
   @override
   void initState(){
     super.initState();
@@ -42,13 +40,11 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final oldTitle = widget.note?.noteTitle;
-    final oldBody = widget.note?.content;
-    return isLoading ? Loading() : Scaffold(
+    return  Scaffold(
       appBar: AppBar(
         title: Text(widget.note == null ? "Add Note" : "Edit Note"),
       ),
-      body: SafeArea(
+      body: isLoading ? Loading() : SafeArea(
           child: SingleChildScrollView(
             child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 10, vertical: 15),
@@ -65,7 +61,7 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
                               padding: EdgeInsets.all(4),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Color(0xFFF8FAFC).withValues(alpha: 200),
+                                color: Color(0xFFF8FAFC).withValues(alpha: 0.12),
                               ),
                               child: Icon(
                                 Icons.title_outlined,
@@ -105,7 +101,7 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
                               padding: EdgeInsets.all(4),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Color(0xFFF8FAFC).withValues(alpha: 200),
+                                color: Color(0xFFF8FAFC).withValues(alpha: 0.12)
                               ),
                               child: Icon(
                                 Icons.notes_outlined,
@@ -162,36 +158,27 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
                               final title = titleController.text;
                               final body = bodyController.text;
                               setState(() {
+                                errorMsg = null;
                                 isLoading = true;
                               });
                               try {
                                 if (widget.note == null) {
                                   await context.read<NoteProvider>().addNote(NoteModel(
                                       content: body,
-                                      noteID: idController.text,
                                       noteTitle: title));
                                 }
-                                else if(widget.note != null){
-                                  if(oldTitle != title){
-                                    updates['title'] = title;
-                                  }
-                                  if(oldBody != body){
-                                    updates['body'] = body;
-                                  }
+                                else {
                                   await context.read<NoteProvider>().editNote(
-                                      widget.note!.noteID, updates);
+                                      widget.note!.noteID!, NoteModel(
+                                      content: body,
+                                       noteTitle: title));
                                 }
                                 if(context.mounted){
                                   Navigator.pop(context);
                                 }
                               } catch (e) {
                               setState(() {
-                                if(widget.note == null){
-                                  errorMsg = "Couldn't create note";
-                                }
-                               else{
-                                 errorMsg = "Couldn't edit note";
-                                }
+                                errorMsg = e.toString();
                               });
                               }
                               finally{
