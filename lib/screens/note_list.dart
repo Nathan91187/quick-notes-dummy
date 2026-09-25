@@ -12,14 +12,21 @@ class NoteList extends StatefulWidget {
 }
 
 class _NoteListState extends State<NoteList> {
+  String? errorMessage;
   @override
   void initState(){
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_){
+    WidgetsBinding.instance.addPostFrameCallback((_) async{
       // wait for the widget to be constructed before getNotes calls notify listeners and
       // asks flutter ro rebuild our widget while its already being built,
       // hence the name postFrameCallback.
-      context.read<NoteProvider>().getNotes();
+      try {
+        await context.read<NoteProvider>().getNotes();
+      } on Exception catch (e) {
+       setState(() {
+         errorMessage = e.toString();
+       });
+      }
     });
 
   }
@@ -34,7 +41,7 @@ class _NoteListState extends State<NoteList> {
             if(noteProvider.isLoading){
               return Loading();
             }
-            else if(noteProvider.errorMessage != null){
+            else if(errorMessage != null){
               return Center(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -46,7 +53,29 @@ class _NoteListState extends State<NoteList> {
                     ),
                     SizedBox(width: 5,),
                     Text(
-                      noteProvider.errorMessage!,
+                      errorMessage!,
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: Color(0xFFF8FAFC).withValues(alpha: .2),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+            else if(noteProvider.noteList.isEmpty){
+              return Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      color: Color(0xFFF8FAFC).withValues(alpha: .2),
+                      size: 30,
+                    ),
+                    SizedBox(width: 5,),
+                    Text(
+                      "No notes to show",
                       style: TextStyle(
                         fontSize: 20,
                         color: Color(0xFFF8FAFC).withValues(alpha: .2),

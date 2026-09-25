@@ -25,7 +25,7 @@ class _NoteCardState extends State<NoteCard> {
       borderRadius: BorderRadius.circular(12),
       onTap: () {
         Navigator.push(context, MaterialPageRoute(
-            builder: (_) => NoteDetails(noteId: widget.note.noteID)));
+            builder: (_) => NoteDetails(noteId: widget.note.noteID!)));
 
       },
       child: Card(
@@ -66,7 +66,7 @@ class _NoteCardState extends State<NoteCard> {
                         } else if (value == "delete_note") {
                           try {
                             await context.read<NoteProvider>().deleteNote(
-                                widget.note.noteID);
+                                widget.note.noteID!);
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(content: Text(
@@ -77,7 +77,7 @@ class _NoteCardState extends State<NoteCard> {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                      content: Text("Couldn't delete note"))
+                                      content: Text(e.toString()))
                               );
                             }
                           }
