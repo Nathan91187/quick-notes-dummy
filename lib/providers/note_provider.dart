@@ -4,25 +4,20 @@ import 'package:quick_notes/services/note_service.dart';
 
 class NoteProvider extends ChangeNotifier{
   bool isLoading = false;
-  String? errorMessage;
   String? deletingNoteId;
   final NoteService noteService = NoteService();
    List<NoteModel> noteList = [
 
   ];
-  Future<void> editNote(String noteID, Map<String , dynamic> updates)async{
-    try{
+  Future<void> editNote(String noteID, NoteModel updates)async{
       final note = await noteService.editNote(noteID, updates);
       final index = noteList.indexWhere((currNote)=> currNote.noteID == noteID);
-      if(index == -1){
-        throw Exception("note not found");
+      if (index == -1) {
+        throw Exception("Note not found in local state");
       }
       noteList[index] = note;
       notifyListeners();
-    }
-    catch(e){
-      throw Exception("Couldn't edit note");
-    }
+
   }
   Future<void> deleteNote(String noteID) async{
     deletingNoteId = noteID;
@@ -30,7 +25,8 @@ class NoteProvider extends ChangeNotifier{
       try {
         await noteService.deleteNote(noteID);
         noteList.removeWhere((note)=> note.noteID == noteID);
-      } finally {
+      }
+      finally {
         deletingNoteId = null;
         notifyListeners();
       }
@@ -42,13 +38,10 @@ class NoteProvider extends ChangeNotifier{
   }
   Future<void> getNotes() async{
     isLoading = true;
-    errorMessage = null;
     notifyListeners();
     try {
       final notes = await noteService.getNotes();
       noteList = notes;
-    } catch (e) {
-      errorMessage = "Failed to load notes";
     }
     finally{
       isLoading = false;
