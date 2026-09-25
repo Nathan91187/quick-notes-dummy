@@ -3,57 +3,97 @@ import 'dart:convert';
 import 'package:quick_notes/models/note.dart';
 import 'package:http/http.dart';
 class NoteService {
+  String uri = "COMPUTER_IP:8080/notes";
   Future<void> deleteNote(String noteID) async{
     final response = await delete(
-        Uri.parse("https://dummyjson.com/posts/$noteID"));
-    if(response.statusCode < 200 || response.statusCode >= 300){
-      throw Exception("Failed to delete note");
+        Uri.parse("$uri/$noteID"));
+    if(response.statusCode == 204){
+      return;
+    }
+    else if (response.statusCode == 404) {
+      throw Exception("Note not found");
+    } else if (response.statusCode == 400) {
+      throw Exception("Invalid request");
+    } else if (response.statusCode >= 500) {
+      throw Exception("Server error");
+    } else {
+      throw Exception("Unexpected error");
+    }
+  }
+  Future<NoteModel> getNoteById(String noteID) async{
+    final response = await get(
+        Uri.parse("$uri/$noteID"));
+    if (response.statusCode == 200) {
+      return NoteModel.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 404) {
+      throw Exception("Note not found");
+    } else if (response.statusCode == 400) {
+      throw Exception("Invalid request");
+    } else if (response.statusCode >= 500) {
+      throw Exception("Server error");
+    } else {
+      throw Exception("Unexpected error");
     }
   }
   Future<List<NoteModel>> getNotes() async{
     final response = await get(
-      Uri.parse("https://dummyjson.com/posts")
+        Uri.parse(uri)
     );
-    if(response.statusCode == 200){
-      final data = jsonDecode(response.body);
-      final List<dynamic> posts = data['posts'];
-     return posts.map((post)=> NoteModel.fromJson(post)).toList();
-    }
-    else{
-     throw Exception("failed to load notes");
+    if (response.statusCode == 200) {
+      final List <dynamic >notes = jsonDecode(response.body);
+      return notes.map((note)=> NoteModel.fromJson(note)).toList();
+    } else if (response.statusCode == 404) {
+      throw Exception("No notes found");
+    } else if (response.statusCode == 400) {
+      throw Exception("Invalid request");
+    } else if (response.statusCode >= 500) {
+      throw Exception("Server error");
+    } else {
+      throw Exception("Unexpected error");
     }
   }
   Future<NoteModel> createNote(NoteModel note) async{
       final response = await post(
-          Uri.parse("https://dummyjson.com/posts/add"),
+          Uri.parse(uri),
           body: jsonEncode({
             ...note.toJson(),
-                'userId': 1,
           }
           ),
           headers: {
             'content-type' : 'application/json',
           }
       );
-      if(response.statusCode < 200 || response.statusCode >= 300){
-        throw Exception("Failed to create note");
+      if (response.statusCode == 201) {
+        return NoteModel.fromJson(jsonDecode(response.body));
+      } else if (response.statusCode == 404) {
+        throw Exception("Note not found");
+      } else if (response.statusCode == 400) {
+        throw Exception("Invalid request");
+      } else if (response.statusCode >= 500) {
+        throw Exception("Server error");
+      } else {
+        throw Exception("Unexpected error");
       }
-      final json = jsonDecode(response.body);
-      return NoteModel.fromJson(json);
-
   }
-  Future<NoteModel> editNote(String noteID, Map<String,dynamic> updates) async{
-    final response = await patch(
-      Uri.parse("https://dummyjson.com/posts/$noteID"),
-      body: jsonEncode(updates),
+  Future<NoteModel> editNote(String noteID, NoteModel note) async{
+
+    final response = await put(
+      Uri.parse("$uri/$noteID"),
+      body: jsonEncode(note.toJson()),
       headers: {
         'content-type' : 'application/json'
       }
     );
-    if(response.statusCode < 200 || response.statusCode >= 300){
-      throw Exception("Failed to update note");
+    if (response.statusCode == 200) {
+      return NoteModel.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 404) {
+      throw Exception("Note not found");
+    } else if (response.statusCode == 400) {
+      throw Exception("Invalid request");
+    } else if (response.statusCode >= 500) {
+      throw Exception("Server error");
+    } else {
+      throw Exception("Unexpected error");
     }
-    final json = jsonDecode(response.body);
-    return NoteModel.fromJson(json);
   }
 }
