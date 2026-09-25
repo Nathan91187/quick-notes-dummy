@@ -17,7 +17,7 @@ class NoteDetails extends StatelessWidget {
       { final note = noteProvider.noteList.firstWhere((note)=> note.noteID == noteId);
         return Scaffold(
         appBar: AppBar(
-          title: Text(note.noteTitle + note.noteID),
+          title: Text(note.noteTitle),
         ),
         body: SingleChildScrollView(
           child: Padding(
